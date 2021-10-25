@@ -1,0 +1,7 @@
+{
+  "name": "NetOptimizationClient",
+  "version": "1.0.0",
+  "dependencies": {
+    "ol": "^6.3.1"
+  }
+}

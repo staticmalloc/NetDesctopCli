@@ -1,0 +1,75 @@
+<html>
+<head>
+    <title>OSM Map</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        html { height: 100% }
+        body { height: 100%; margin: 0; padding: 0 }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/build/ol.js"></script>
+<!--    <script src="http://openlayers.org/api/OpenLayers.js"></script>-->
+    <script type="text/javascript">
+        var lat=55.05738447;
+        var lon=82.90631741;
+        var zoom=15;
+        var map;
+
+        function send_position(evt){
+            console.log(evt);
+            console.log(lat, lon, zoom);
+            app.handle(lat, lon, zoom);
+            $(document).trigger("moveend", zoomend_event);
+        }
+
+        function getLongLatZoom() {
+            app.handle(lat, lon, zoom);
+        }
+
+        function init(){
+            map = new OpenLayers.Map ("map", {
+                controls:[
+                    new OpenLayers.Control.Navigation(),
+                    new OpenLayers.Control.PanZoomBar(),
+                    new OpenLayers.Control.LayerSwitcher(),
+                    new OpenLayers.Control.Attribution()],
+                maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+                maxResolution: 156543.0399,
+                numZoomLevels: 19,
+                units: 'm',
+                projection: new OpenLayers.Projection("EPSG:900913"),
+                displayProjection: new OpenLayers.Projection("EPSG:4326")
+            } );
+
+
+            map.addLayer(new OpenLayers.Layer.OSM());
+
+            var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+
+            map.setCenter (lonLat, zoom);
+
+            //Initialise the vector layer using OpenLayers.Format.OSM
+            var layer = new OpenLayers.Layer.Vector("Polygon", {
+                strategies: [new OpenLayers.Strategy.Fixed()],
+                protocol: new OpenLayers.Protocol.HTTP({
+                    url: "myosmfile.osm",   //<-- relative or absolute URL to your .osm file
+                    format: new OpenLayers.Format.OSM()
+                }),
+                projection: new OpenLayers.Projection("EPSG:4326")
+            });
+
+            // map.on("moveend",(e) => {
+            //     console.log("CATCHED");
+            //     send_position(e)});
+            map.addEventListener('click',
+                function(e) {
+                    console.log(document.getElementById("mouse-position").childNodes[0].innerHTML)
+                });
+        }
+
+    </script>
+</head>
+<body onload="init()">
+<div id="map" class="smallmap"></div>
+</div>
+</body>
+</html>

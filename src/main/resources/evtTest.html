@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head><title>OSM Map</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        html { height: 100% }
+        body { height: 100%; margin: 0; padding: 0 }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css" type="text/css">
+    <style>
+        .map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/build/ol.js"></script>
+</head>
+<body>
+<div id="map" class="map"></div>
+<script type="text/javascript">
+
+
+    var lat=55.05738447;
+    var lon=82.90631741;
+
+    var zoom=15;
+    function send_position(evt){
+        var view = map.getView();
+        var center = ol.proj.toLonLat(view.getCenter());
+        var res = map.getSize();
+        var zeropixel = [0,0];
+        var lonlat = ol.proj.toLonLat(map.getCoordinateFromPixel(zeropixel));
+        app.handle(center[1], center[0], view.getZoom(), lonlat[1], lonlat[0]);
+    }
+
+    function getLongLatZoom() {
+        app.handle(lat, lon, zoom, lat, lon);
+    }
+    var map = new ol.Map({
+        target: 'map',
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+        ],
+        view: new ol.View({
+            center: ol.proj.fromLonLat([lon,lat]),
+            zoom: zoom
+        })
+    });
+    map.on("postrender", send_position);
+</script>
+</body>
+</html>
