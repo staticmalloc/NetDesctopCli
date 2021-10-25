@@ -1,4 +1,4 @@
-package OSM;
+package client.OSM;
 
 import javafx.event.Event;
 

@@ -1,4 +1,4 @@
-package GoogleMap;
+package client.GoogleMap;
 
 import javafx.event.Event;
 

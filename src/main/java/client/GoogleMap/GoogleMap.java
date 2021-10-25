@@ -1,4 +1,4 @@
-package GoogleMap;
+package client.GoogleMap;
 
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.value.ChangeListener;

@@ -1,4 +1,4 @@
-package OSM;
+package client.OSM;
 
 import javafx.concurrent.Worker;
 import javafx.event.EventHandler;
@@ -6,6 +6,8 @@ import javafx.scene.Parent;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
+
+import java.net.URL;
 
 public class OSMMap extends Parent {
 
@@ -51,7 +53,10 @@ public class OSMMap extends Parent {
         webView = new WebView();
         webEngine = webView.getEngine();
         webEngine.setJavaScriptEnabled(true);
-        webEngine.load(getClass().getResource("/resources/evtTest.html").toExternalForm());
+        String path = "../../../../resources/main/evtTest.html";
+        System.out.println(path);
+        String resource = getClass().getResource(path).toExternalForm();
+        webEngine.load(resource);
         getChildren().add(webView);
         ready = false;
         webEngine.getLoadWorker().stateProperty().addListener((observableValue, oldState, newState) -> {

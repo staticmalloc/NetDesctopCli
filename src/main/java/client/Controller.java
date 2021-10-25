@@ -1,6 +1,6 @@
 package client;
 
-import OSM.OSMMap;
+import client.OSM.OSMMap;
 import com.google.gson.Gson;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
