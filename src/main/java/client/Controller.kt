@@ -100,10 +100,12 @@ class Controller internal constructor(private val primaryStage: Stage) {
         val showNet = scene!!.lookup("#shownet") as Button
         showNet.pressedProperty().addListener { obs: ObservableValue<out Boolean>?, oldVal: Boolean?, newVal: Boolean ->
             if (newVal) {
-                val coverageNetData = requestNet("GSM", 50)
+                //val coverageNetData = requestNet("GSM", 25)
+                val connectionType = "WCDMA"
+                val coverageNetData = requestNet("WCDMA", 25)
                 println(coverageNetData.index_type)
                 println("Cur Resolution: " + map!!.width + "x" + map!!.height)
-                drawCoverageImage(coverageNetData)
+                drawCoverageImage(coverageNetData, connectionType)
             }
         }
     }
@@ -118,7 +120,14 @@ class Controller internal constructor(private val primaryStage: Stage) {
         }
     }
 
-    private fun drawCoverageImage(netData: CoverageNetRequest) {
+    private fun getColorSelector(connectionType: String): (Int)->Color =
+        when (connectionType){
+            "WCDMA" ->  { value:Int -> getWCDMAColor(value)}
+            "GSM" -> {value:Int -> getRSSIColor(value)}
+            else -> { _:Int -> Color.TRANSPARENT}
+        }
+
+    private fun drawCoverageImage(netData: CoverageNetRequest, connectionType: String) {
         val mapWidth = map!!.width
         val mapHeight = map!!.height
         val canvas = Canvas(mapWidth, mapHeight)
@@ -133,13 +142,21 @@ class Controller internal constructor(private val primaryStage: Stage) {
             for (i in 0 until netData.sizeX) {
                 val x = i * sizeX
                 val y = j * sizeY
-                val rssi = netData.data[(netData.sizeY-1-j) * netData.sizeX + i]
-                drawRect(gc, getRSSIColor(rssi), x, y, sizeX, sizeY)
+                val ss = netData.data[(netData.sizeY - 1 - j) * netData.sizeX + i]
+                val colorGetter = getColorSelector(connectionType)
+                drawRound(gc, colorGetter(ss), x, y, sizeX, sizeY)
+
             }
         }
         val pane_for_map = scene!!.lookup("#pane_for_map") as StackPane
         covarageLayer = canvas
         pane_for_map.children.add(canvas)
+    }
+
+    private fun drawRound(gc: GraphicsContext, color: Color, x0: Double, y0: Double, w: Double, h: Double) {
+        gc.fill = color
+        val scale = 1.5f
+        gc.fillOval(x0, y0, w*scale, h*scale)
     }
 
     private fun drawLine(gc: GraphicsContext, x0: Int, y0: Int, x1: Int, y1: Int) {
@@ -156,10 +173,21 @@ class Controller internal constructor(private val primaryStage: Stage) {
     private fun getRSSIColor(rssi: Int): Color {
         return when {
             rssi > -10 -> Color.TRANSPARENT
-            rssi > -60 -> Color.GREEN
-            rssi > -70 -> Color.DARKGREEN
+            rssi > -60 -> Color.DARKGREEN
+            rssi > -70 -> Color.GREEN
             rssi > -80 -> Color.YELLOW
             rssi > -120 -> Color.RED
+            else -> Color.DARKRED
+        }
+    }
+
+    private fun getWCDMAColor(ss: Int): Color {
+        return when {
+            ss > -10 -> Color.TRANSPARENT
+            ss > -55 -> Color.DARKGREEN
+            ss > -85 -> Color.GREEN
+            ss > -100 -> Color.YELLOW
+            ss > -110 -> Color.RED
             else -> Color.DARKRED
         }
     }
