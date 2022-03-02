@@ -11,6 +11,7 @@ import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.Button
+import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
@@ -29,6 +30,7 @@ class Controller internal constructor(private val primaryStage: Stage) {
     private val urlString = "http://localhost:1598/coverage" //37.192.189.42
     private var httpClient: HttpClient? = null
     private var covarageLayer: Canvas? = null
+    private var selectedType = "LTE"
 
     @Throws(IOException::class)
     private fun init() {
@@ -74,15 +76,15 @@ class Controller internal constructor(private val primaryStage: Stage) {
     private fun setListeners() {
         val pane_for_map = scene!!.lookup("#pane_for_map") as StackPane
         primaryStage.widthProperty()
-            .addListener { obs: ObservableValue<out Number?>?, oldVal: Number?, newVal: Number? ->
+            .addListener { _, _, _ ->
                 map!!.width = pane_for_map.width
             }
         primaryStage.heightProperty()
-            .addListener { obs: ObservableValue<out Number?>?, oldVal: Number?, newVal: Number? ->
+            .addListener { _, _, _ ->
                 map!!.height = pane_for_map.height
             }
         primaryStage.fullScreenProperty()
-            .addListener { obs: ObservableValue<out Boolean?>?, oldVal: Boolean?, newVal: Boolean? ->
+            .addListener { _, _, _ ->
                 map!!.width = pane_for_map.width
                 map!!.height = pane_for_map.height
             }
@@ -91,22 +93,25 @@ class Controller internal constructor(private val primaryStage: Stage) {
         val longtitude = scene!!.lookup("#longtitude") as Label
         val zoom = scene!!.lookup("#zoom") as Label
         update.pressedProperty()
-            .addListener { obs: ObservableValue<out Boolean?>?, oldVal: Boolean?, newVal: Boolean? ->
+            .addListener { _, _, _ ->
                 map!!.updateLongLatZoom()
                 lat.text = map!!.lat00.toString()
                 longtitude.text = map!!.lon00.toString()
                 zoom.text = map!!.curZoom.toString()
             }
         val showNet = scene!!.lookup("#shownet") as Button
-        showNet.pressedProperty().addListener { obs: ObservableValue<out Boolean>?, oldVal: Boolean?, newVal: Boolean ->
+        showNet.pressedProperty().addListener { _, _, newVal ->
             if (newVal) {
-                //val coverageNetData = requestNet("GSM", 25)
-                val connectionType = "WCDMA"
-                val coverageNetData = requestNet("WCDMA", 25)
+                val coverageNetData = requestNet(selectedType, 25)
                 println(coverageNetData.index_type)
                 println("Cur Resolution: " + map!!.width + "x" + map!!.height)
-                drawCoverageImage(coverageNetData, connectionType)
+                drawCoverageImage(coverageNetData, selectedType)
             }
+        }
+        val combo = scene!!.lookup("#cType") as ComboBox<String>
+        combo.items.addAll("GSM", "CDMA", "WCDMA", "LTE")
+        combo.selectionModel.selectedItemProperty().addListener { _, _, newValue ->
+            selectedType = newValue ?: "LTE"
         }
     }
 
@@ -120,11 +125,12 @@ class Controller internal constructor(private val primaryStage: Stage) {
         }
     }
 
-    private fun getColorSelector(connectionType: String): (Int)->Color =
-        when (connectionType){
-            "WCDMA" ->  { value:Int -> getWCDMAColor(value)}
-            "GSM" -> {value:Int -> getRSSIColor(value)}
-            else -> { _:Int -> Color.TRANSPARENT}
+    private fun getColorSelector(connectionType: String): (Int) -> Color =
+        when (connectionType) {
+            "WCDMA" -> { value: Int -> getWCDMAColor(value) }
+            "GSM" -> { value: Int -> getRSSIColor(value) }
+            "LTE" -> { value: Int -> getRSRPColor(value) }
+            else -> { _: Int -> Color.TRANSPARENT }
         }
 
     private fun drawCoverageImage(netData: CoverageNetRequest, connectionType: String) {
@@ -156,7 +162,7 @@ class Controller internal constructor(private val primaryStage: Stage) {
     private fun drawRound(gc: GraphicsContext, color: Color, x0: Double, y0: Double, w: Double, h: Double) {
         gc.fill = color
         val scale = 1.5f
-        gc.fillOval(x0, y0, w*scale, h*scale)
+        gc.fillOval(x0, y0, w * scale, h * scale)
     }
 
     private fun drawLine(gc: GraphicsContext, x0: Int, y0: Int, x1: Int, y1: Int) {
@@ -179,6 +185,11 @@ class Controller internal constructor(private val primaryStage: Stage) {
             rssi > -120 -> Color.RED
             else -> Color.DARKRED
         }
+    }
+
+    private fun getRSRPColor(rsrp: Int): Color {
+        //TODO
+        return getRSSIColor(rsrp)
     }
 
     private fun getWCDMAColor(ss: Int): Color {
